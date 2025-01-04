@@ -1,6 +1,10 @@
-#include "Adafruit_seesaw.h" // mini gamepad (on STEMMA QT)
+#define USE_INPUT_GAMEPAD
+#ifdef USE_INPUT_GAMEPAD
+# include "Adafruit_seesaw.h" // mini gamepad (on STEMMA QT)
+#endif
 
 // mini gamepad (on STEMMA QT)
+#ifdef USE_INPUT_GAMEPAD
 Adafruit_seesaw ss;
 #define BUTTON_X         6
 #define BUTTON_Y         2
@@ -11,11 +15,13 @@ Adafruit_seesaw ss;
 uint32_t button_mask = (1UL << BUTTON_X) | (1UL << BUTTON_Y) | (1UL << BUTTON_START) |
                        (1UL << BUTTON_A) | (1UL << BUTTON_B) | (1UL << BUTTON_SELECT);
 //#define IRQ_PIN   5
+#endif
 
 bool gamepad_found = false;
 
 // ------------------------ Start mini gamepad input ---------------------------
 void setup_input_gamepad(void) {
+#ifdef USE_INPUT_GAMEPAD
   gamepad_found = ss.begin(0x50);
   if (!gamepad_found) {
     Serial.println("seesaw not found - no gamepad will be used.");
@@ -37,10 +43,14 @@ void setup_input_gamepad(void) {
     pinMode(IRQ_PIN, INPUT);
   #endif
   }
+#else
+  Serial.println("gamepad skipped - USE_INPUT_GAMEPAD not defined at compile time");
+#endif
 }
 
 // ------------------------ Check mini gamepad input ---------------------------
 void loop_input_gamepad(void) {
+#ifdef USE_INPUT_GAMEPAD
   static int last_x = 0;
   static int last_y = 0; // old joystick position
   int x_move = 0;
@@ -93,4 +103,5 @@ void loop_input_gamepad(void) {
   }
 
   ScreenMove (x_move, y_move);
+#endif
 }

@@ -349,6 +349,14 @@ void app_update(void) {
   if (is_connected) {
     has_ip = wifi_has_ip();
   }
+  //Serial.print("app_update did_init: ");
+  //Serial.print(did_init);
+  //Serial.print(", was_connected: ");
+  //Serial.print(was_connected);
+  //Serial.print(", is_connected: ");
+  //Serial.print(is_connected);
+  //Serial.print(", has_ip: ");
+  //Serial.println(has_ip);
   if ((!did_init || !was_connected) && is_connected) {
     if ((!did_init || !had_ip) && has_ip) {
       IPAddress my_ip_addr;
@@ -358,9 +366,9 @@ void app_update(void) {
 
       // save successful WiFi ssid and password.
       app_prefs_put (app_settings);
-
+#ifdef OTA_UPDATE
       over_the_air_update_setup ();
-
+#endif
       app_time_set();
     }
     if ((!did_init || had_ip) && !has_ip) {

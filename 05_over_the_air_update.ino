@@ -1,4 +1,4 @@
-
+#ifdef OTA_UPDATE
 void over_the_air_update_setup(void) {
   // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
@@ -45,3 +45,4 @@ void over_the_air_update_setup(void) {
 void over_the_air_update_loop(void) {
   ArduinoOTA.handle(); 
 }
+#endif

@@ -1,14 +1,17 @@
+#ifdef USE_HAPTIC
 #include <SPI.h>
 #include <Wire.h> // for i2c keyboard, DRV2605 haptic feedback, FM RDS transmitter
 
 #include "Adafruit_DRV2605.h" // haptic
 
 Adafruit_DRV2605 drv; // haptic
+#endif
 
 bool haptic_found = false;
 
 void setup_haptic(void) {
   // --------------------------------- Start haptic output ----------------------------
+#ifdef USE_HAPTIC
   haptic_found = drv.begin();
   if (!haptic_found) {
     Serial.println("DRV2605 not found - no haptic feedback will be used.");
@@ -19,10 +22,14 @@ void setup_haptic(void) {
     // default, internal trigger when sending GO command
     drv.setMode(DRV2605_MODE_INTTRIG); 
   }
+#else
+  Serial.println("DRV2605 haptic feedback skipped - compiled without USE_HAPTIC defined.");
+#endif
 }
 
 // ---------------- make a haptic rumble "click" ------------
 void haptic_click(void) {
+#ifdef USE_HAPTIC
   if (!haptic_found) {
     return;
   }
@@ -34,4 +41,5 @@ void haptic_click(void) {
 
   // play the effect!
   drv.go();
+#endif
 }

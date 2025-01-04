@@ -12,10 +12,13 @@
 // Store last WiFi ssid and password. Docs: https://randomnerdtutorials.com/esp32-save-data-permanently-preferences/
 #include <Preferences.h>
 
+//#define OTA_UPDATE
+#ifdef OTA_UPDATE
 // Over-the-air updates ('OTA'): https://lastminuteengineers.com/esp32-ota-updates-arduino-ide/
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
+# include <ESPmDNS.h>
+# include <WiFiUdp.h>
+# include <ArduinoOTA.h>
+#endif
 
 #include "my_tft.h"
 
@@ -50,6 +53,8 @@ void loop()
 {
   char kb_in = 0; // no keyboard input
 
+  //Serial.println("loop() start");
+
   if (until_io <= 0) {
     do_unclick = false;
 
@@ -76,12 +81,17 @@ void loop()
   }
   until_io--;
 
-  //delay(100);
+#ifdef OTA_UPDATE
   if (is_wifi_connected() && wifi_has_ip()) {
     over_the_air_update_loop();
   } else {
     delay(10);
   }
+#else
+  // delay(10);
+#endif
 
   sevenseg_loop();
+
+  //Serial.println("loop() end");
 }
