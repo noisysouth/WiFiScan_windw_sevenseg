@@ -166,7 +166,7 @@ void ScreenDraw(void) {
   int ctrl_idx;
   struct tab_ctrl_s *chk_ctrl;
 
-  tft.fillScreen(get_color_backgr());
+  tft.fillScreen(GetColorBackgr());
   scrn = cur_screen;
   ctrl_idx = 0;
   do {

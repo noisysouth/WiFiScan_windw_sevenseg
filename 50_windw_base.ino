@@ -27,7 +27,7 @@ enum color_e {
   // raw 565 format colors:
   // Source: https://github.com/newdigate/rgb565_colors/tree/main?tab=readme-ov-file#gray
   color_silver = 0xbdf7,
-  //color_lt_gray = 0x6B4D, // dim gray 
+  color_dim_gray = 0x6B4D,
   color_lt_gray = 0xd69a,
   color_dk_gray = 0x29A7, // gunmetal gray
 
@@ -35,6 +35,7 @@ enum color_e {
   color_highlight = color_silver, // color_white,
   //color_shadow = 0x328A, // dark slate gray
   color_shadow = color_dk_gray,
+  color_dim_window = color_dim_gray,
   color_window = color_lt_gray,
 
   color_cap_shadow = color_black,
@@ -45,30 +46,31 @@ enum color_e {
   color_btn_text = color_black,
   color_edit_text = color_black,
   color_edit_backgr = color_white,
+  color_edit_dim_backgr = color_dk_gray,
   color_edit_cursor = color_black,
 
   color_label_text = color_black,
   color_label_backgr = color_window,
+  color_label_dim_backgr = color_dim_window,
 
   color_focus_border = color_black,
 
   color_list_text = color_black,
   color_list_backgr = color_window,
+  color_list_dim_backgr = color_dim_window,
 
   color_up_down_text = color_black,
   color_up_down_backgr = color_white,
+  color_up_down_dim_backgr = color_dk_gray,
   color_up_down_arrow = color_black,
 
   color_check_box_text = color_black,
   color_check_box_backgr = color_window,
+  color_check_box_dim_backgr = color_dim_window,
   color_check_box_check = color_black,
 
   color_count,
 };
-
-int get_color_backgr (void) {
-  return color_backgr;
-}
 
 // ----------------------- window structures ----------------------------
 
@@ -184,7 +186,9 @@ struct up_down_s {
   struct windw_s down_windw;
 
   void (*cb_func)(double sel_val); // function to call when 'ok'/'Enter'/right button/center button is clicked.
-  // callback function will be 'void my_func(char *sel_val)'.
+  // callback function will be 'void my_func(double sel_val)'.
+  void (*cb_chg_func)(double chg_val); // function to call when value is changed up/down, BEFORE 'OK'.
+  // callback function will be 'void my_func(double chg_val)'.
 };
 
 #define CHECK_BOX_WIDTH_PIXELS   64
@@ -334,6 +338,60 @@ void DrawDashedVLineToCanvas(GFXcanvas16 *canvas, int line_x, int line_y, int li
     }
 }
 
+// ------------------- get colors ------------------------
+
+int GetColorBackgr (void) {
+  return color_backgr;
+}
+
+int GetColorWindow(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_window;
+  } else {
+    return color_dim_window;
+  }
+}
+
+int GetColorEditBackgr(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_edit_backgr;
+  } else {
+    return color_edit_dim_backgr;
+  }
+}
+
+int GetColorLabelBackgr(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_label_backgr;
+  } else {
+    return color_label_dim_backgr;
+  }
+}
+
+int GetColorListBackgr(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_list_backgr;
+  } else {
+    return color_list_dim_backgr;
+  }
+}
+
+int GetColorUpDownBackgr(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_up_down_backgr;
+  } else {
+    return color_up_down_dim_backgr;
+  }
+}
+
+int GetColorCheckBoxBackgr(void) {
+  if (app_settings->bright_steps >= 0) {
+    return color_check_box_backgr;
+  } else {
+    return color_check_box_dim_backgr;
+  }
+}
+
 // Adapted from: Borland C++ Power Programming by Clayton Walnum
 // https://fabiensanglard.net/reverse_engineering_strike_commander/docs/Borland_C___Power_Programming_Book_and_Disk__Programming_.pdf
 // pg. 129 (PDF pg. 143)
@@ -481,7 +539,7 @@ void DrawWindowToCanvas(struct windw_s *wnd, GFXcanvas16 *canvas) {
   DrawBorderToCanvas (canvas, wnd, border_outset);
 
   // center
-  canvas->fillRect(2, 2, wnd->ww-4, wnd->wh-4, color_window);
+  canvas->fillRect(2, 2, wnd->ww-4, wnd->wh-4, GetColorWindow());
 
   //Draw border, if requested.
   if (wnd->border_style == border_ridge) {
@@ -526,7 +584,7 @@ void DrawWindow(struct windw_s *wnd) {
     DrawBorder (&tft, wnd, border_outset);
 
     // center
-    tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-3, wnd->wh-3, color_window);
+    tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-3, wnd->wh-3, GetColorWindow());
 
     //Draw border, if requested.
     if (wnd->border_style == border_ridge) {
@@ -661,7 +719,7 @@ void DrawButtonLabelToCanvas(struct button_s *btn) {
   wnd = &btn->windw;
 
   lc = btn->label_canvas;
-  lc->fillScreen(color_window); // Clear button label canvas (not tft)
+  lc->fillScreen(GetColorWindow()); // Clear button label canvas (not tft)
 
 	// Find and remove the ^ character and
 	// set the appropriate hot key.
@@ -1042,7 +1100,8 @@ bool CtrlCanFocus(struct tab_ctrl_s *ctrl) {
 
 // ------------------- Edit control -------------------------
 
-void SetupEdit (struct edit_s *edt, int x, int y, int text_max_chars, const char *text_default) {
+//void SetupEdit (struct edit_s *edt, int x, int y, int text_max_chars, const char *text_default) {
+void SetupEdit (struct edit_s *edt, int x, int y, int text_max_chars, char *text_default) {
   int w;
 
   if (text_max_chars > EDIT_MAX_TEXT-1) {
@@ -1058,14 +1117,8 @@ void SetupEdit (struct edit_s *edt, int x, int y, int text_max_chars, const char
   //SetupWindow(&edt->windw, x, y, w, EDIT_HEIGHT_PIXELS/*h*/, 0/*brd*/, 1/*buf*/);
   SetupWindow(&edt->windw, x, y, w, EDIT_HEIGHT_PIXELS/*h*/, 0/*brd*/, 0/*buf*/); // no use for buffering this
 
-  if (text_default != NULL) {
-    strncpy (edt->text_str, text_default, EDIT_MAX_TEXT);
-  } else { // text_default == NULL
-    edt->text_str[0] = '\x0';
-  }
-  edt->text_str[EDIT_MAX_TEXT-1] = '\x0'; // ensure null term.
+  SetEdit (edt, text_default);
 
-  edt->cursor_idx = strlen(edt->text_str);
   edt->cursor_blink_on = false;
   edt->cursor_blink_count = 0;
 }
@@ -1080,7 +1133,7 @@ void DrawEdit (struct edit_s *edt, bool has_focus) {
 
   DrawBorder(&tft, wnd, border_inset);
 
-  tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-4, wnd->wh-4, color_edit_backgr);
+  tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-4, wnd->wh-4, GetColorEditBackgr());
 
   // Draw text in control.
   tft.setTextSize(2);
@@ -1106,7 +1159,7 @@ void DrawEditCursor (struct edit_s *edt) {
   if (edt->cursor_blink_on) {
     draw_erase_color = color_edit_cursor; // draw
   } else { // !cursor_blink_on
-    draw_erase_color = color_edit_backgr; // erase
+    draw_erase_color = GetColorEditBackgr(); // erase
   }
   tft.drawFastVLine(tx + edt->cursor_idx*CHAR_WIDTH_PIXELS-2, ty-2, CHAR_HEIGHT_PIXELS+2, draw_erase_color);
   tft.drawFastVLine(tx + edt->cursor_idx*CHAR_WIDTH_PIXELS-1, ty-2, CHAR_HEIGHT_PIXELS+2, draw_erase_color);
@@ -1225,6 +1278,18 @@ char *GetEdit (struct edit_s *edt) {
   return edt->text_str;
 }
 
+// put a string into an edit control
+void SetEdit (struct edit_s *edt, char *new_text) {
+  if (new_text != NULL) {
+    strncpy (edt->text_str, new_text, EDIT_MAX_TEXT);
+  } else { // text_default == NULL
+    edt->text_str[0] = '\x0';
+  }
+  edt->text_str[EDIT_MAX_TEXT-1] = '\x0'; // ensure null term.
+
+  edt->cursor_idx = strlen(edt->text_str);
+}
+
 // ------------------- Label control -------------------------
 
 void SetLabel (struct label_s *lbl, const char *text_str) {
@@ -1265,7 +1330,7 @@ void DrawLabel (struct label_s *lbl, bool has_focus) {
 
   DrawBorder(&tft, wnd, border_inset);
 
-  tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-4, wnd->wh-4, color_label_backgr);
+  tft.fillRect(wnd->wx+2, wnd->wy+2, wnd->ww-4, wnd->wh-4, GetColorLabelBackgr());
 
   // Draw text in control.
   tft.setTextSize(2);
@@ -1426,7 +1491,7 @@ void DrawList (struct list_s *lst, bool has_focus) {
   int tx, ty, vis_idx; // visible index
   int item_idx;
 
-  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, color_list_backgr);
+  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, GetColorListBackgr());
 
   tft.setTextSize(2);
   tft.setTextWrap(true);
@@ -1485,8 +1550,9 @@ void ClickList (struct list_s *lst) {
 //  text field will contain up to 'text_max_chars'. This determines width on screen.
 //  default value will be 'dfl_val'. min/max limits are 'min_val' to 'max_val'. Step size is 'val_step'.
 //  when an item is chosen (with 'Enter', right-arrow, middle button, etc.), void cb_func(double sel_val) will be called.
+//  when value is adjusted (with up-arrow, down-arrow, up button, down button, etc.), void cb_chg_func(double chg_val) will be called.
 // When displayed, 'val_prec' is the number of digits that will be displayed after the decimal.
-void SetupUpDown (struct up_down_s *updn, int x, int y, int text_max_chars, void (*cb_func)(double), double min_val, double max_val, double dfl_val, double val_step, int val_prec) {
+void SetupUpDown (struct up_down_s *updn, int x, int y, int text_max_chars, void (*cb_func)(double), void (*cb_chg_func)(double), double min_val, double max_val, double dfl_val, double val_step, int val_prec) {
   int w, h;
   char dfl_text[UP_DOWN_MAX_TEXT];
 
@@ -1515,6 +1581,7 @@ void SetupUpDown (struct up_down_s *updn, int x, int y, int text_max_chars, void
   updn->sel_val = dfl_val;
 
   updn->cb_func = cb_func;
+  updn->cb_chg_func = cb_chg_func;
 }
 
 void DrawUpDown (struct up_down_s *updn, bool has_focus) {
@@ -1527,7 +1594,7 @@ void DrawUpDown (struct up_down_s *updn, bool has_focus) {
   int tx, ty;
   char sel_str[UP_DOWN_MAX_TEXT];
 
-  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, color_up_down_backgr);
+  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, GetColorUpDownBackgr());
 
   tft.setTextSize(2);
   tft.setTextWrap(true);
@@ -1570,7 +1637,12 @@ void DrawUpDown (struct up_down_s *updn, bool has_focus) {
     Serial.print(sel_str);
     Serial.println("\"");      
   } else {
-    snprintf (sel_str, updn->text_max_chars+1, "%d", updn->sel_val);
+    Serial.print("sel_val: ");
+    Serial.print(updn->sel_val);
+    snprintf (sel_str, updn->text_max_chars+1, "%d", (int)(updn->sel_val));
+    Serial.print(" sel_str: \"");
+    Serial.print(sel_str);
+    Serial.println("\"");
   }
 
   DrawBorder(&tft,      wnd, border_inset);
@@ -1635,7 +1707,13 @@ void RoundUpDownNearest (struct up_down_s *updn) {
   double scale;
   
   scale = pow10(updn->val_prec);
+  Serial.print("RoundUpDownNearest() updn->sel_val: ");
+  Serial.print(updn->sel_val);
+  Serial.print(", scale: ");
+  Serial.print(scale);
   updn->sel_val = round (updn->sel_val * scale) / scale;
+  Serial.print(", rounded updn->sel_val: ");
+  Serial.println(updn->sel_val);
 }
 
 //  up/down control goes 'down' in value
@@ -1652,6 +1730,10 @@ bool ClickUpDownDown (struct up_down_s *updn) {
     updn->sel_val = updn->min_val;
   }
   DrawUpDown (updn, true/*has_focus*/);
+
+  if (updn->cb_chg_func != NULL) {
+    updn->cb_chg_func(updn->sel_val);
+  }
 
   return true;
 }
@@ -1670,6 +1752,10 @@ bool ClickUpDownUp (struct up_down_s *updn) {
     updn->sel_val = updn->max_val;
   }
   DrawUpDown (updn, true/*has_focus*/);
+
+  if (updn->cb_chg_func != NULL) {
+    updn->cb_chg_func(updn->sel_val);
+  }
 
   return true;
 }
@@ -1733,7 +1819,7 @@ void DrawCheckBox (struct check_box_s *cb, bool has_focus) {
   tx = wnd->wx+8+CHECK_BOX_SQUARE_PIXELS+3;
   ty = wnd->wy+9;
 
-  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, color_check_box_backgr);
+  tft.fillRect(wnd->wx, wnd->wy, wnd->ww, wnd->wh, GetColorCheckBoxBackgr());
 
   DrawBorder(&tft, sq_wnd, border_inset);
 

@@ -1,4 +1,4 @@
-#define USE_INPUT_GAMEPAD
+//#define USE_INPUT_GAMEPAD
 #ifdef USE_INPUT_GAMEPAD
 # include "Adafruit_seesaw.h" // mini gamepad (on STEMMA QT)
 #endif

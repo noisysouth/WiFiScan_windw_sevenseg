@@ -24,9 +24,10 @@
 
 void setup()
 {
-  delay(2000);
+  delay(3500); // to get Serial Monitor COM port to enumerate, a long delay BEFORE Serial.begin() is key..
   Serial.begin(115200);
-  delay(2000);
+  Serial.println("Opened serial");
+  //delay(2000);
 
   setup_tft();
   setup_app_screens();

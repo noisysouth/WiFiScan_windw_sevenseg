@@ -26,10 +26,41 @@
 
 #define TIMET_1JAN2016 1451628000
 
-Adafruit_7segment matrix[2];
-Adafruit_AlphaNum4 alpha4[3];
+const int matrix_count = 2;
+const int  alpha_count = 3;
+
+//Adafruit_7segment matrix[2];
+//Adafruit_AlphaNum4 alpha4[3];
+Adafruit_7segment matrix[matrix_count];
+Adafruit_AlphaNum4 alpha4[alpha_count];
 char *dayNames[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 char *monNames[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+void sevenseg_bright_set(void) {
+  int idx;
+
+  if (app_settings->bright_steps >= 0) {
+    for (idx = 0; idx < matrix_count; idx++) {
+      matrix[idx].setDisplayState(1);
+      matrix[idx].setBrightness(app_settings->bright_steps);
+    }
+    for (idx = 0; idx < alpha_count; idx++) {
+      alpha4[idx].setDisplayState(1);
+      alpha4[idx].setBrightness(app_settings->bright_steps);
+    }
+    if (app_settings->bright_steps == 0) {
+      ScreenDraw(); // draw not-dimmed
+    }
+  } else {
+    for (idx = 0; idx < matrix_count; idx++) {
+      matrix[idx].setDisplayState(0);
+    }
+    for (idx = 0; idx < alpha_count; idx++) {
+      alpha4[idx].setDisplayState(0);
+    }
+    ScreenDraw(); // draw dimmer
+  }
+}
 
 void sevenseg_setup(void) {
   matrix[0] = Adafruit_7segment();
@@ -46,6 +77,8 @@ void sevenseg_setup(void) {
   alpha4[0].begin(0x72);
   alpha4[1].begin(0x73);
   alpha4[2].begin(0x74);
+
+  sevenseg_bright_set();
 }
 
 void sevenseg_loop(void) {
@@ -86,14 +119,16 @@ void sevenseg_loop(void) {
 
   matrix[0].drawColon(true);
 
-  // doesn"t work for me?
-  //matrix[1].writeDigitRaw(0xc, 0x3); // left colon: both bits (0x8 + 0x4 = 0xc;  0x2 + 0x1 = 0x3)
-  // Source: https://forums.adafruit.com/viewtopic.php?t=53654
-  // https://learn.adafruit.com/adafruit-led-backpack/1-2-inch-7-segment-backpack-arduino-wiring-and-setup
+  if (app_settings->last_colon) { // use on large 1.2" red and yellow displays, which do not have a decimal point here.
+    // Tip: cover up the top of the final colon with black duct tape. Now it looks like a (slightly raised) decimal point.
+    matrix[1].writeDigitRaw(2, 0xe); // middle and left colons: location 2, bits (0x8 + 0x4 + 0x2 = 0xe)
+  } else {
+    matrix[1].writeDigitRaw(2, 0xc); // left colon: location 2, both bits (0x8 + 0x4 = 0xc)
+  }
   // Seconds
   matrix[1].writeDigitNum(0, now_tm.tm_sec/10);
   matrix[1].writeDigitNum(1, now_tm.tm_sec%10, true /* draw decimal, 0.56" height only*/);
-  //matrix[1].writeDigitRaw(2, true); // middle colon; // doesn"t work for me?
+
   // fractional seconds
   matrix[1].writeDigitNum(3, tv_now.tv_usec/100000);
   matrix[1].writeDigitNum(4, (tv_now.tv_usec/10000) % 10);

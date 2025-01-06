@@ -13,11 +13,11 @@ void setup_tft(void) {
   // 2: end w/ USB connector is top of sreen
   // 3: side w/ fewer pins is top of screen
   tft.setRotation(1);
-  tft.fillScreen(get_color_backgr());
+  tft.fillScreen(GetColorBackgr());
 
   Serial.println(F("Initialized"));
 
   uint16_t time = millis();
-  tft.fillScreen(get_color_backgr());
+  tft.fillScreen(GetColorBackgr());
   time = millis() - time;
 }

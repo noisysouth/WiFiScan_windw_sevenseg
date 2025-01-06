@@ -90,16 +90,30 @@ struct ctrl_screen_s pass_screen = {
 };
 
 // *** main app screen ***
-struct cap_twindw_s ctwnd_main;
+//struct cap_twindw_s ctwnd_main;
+struct label_s lbl_clock;
+struct check_box_s cb_lastcolon;
 struct button_s btn_ip;
+struct label_s lbl_utc;
 struct up_down_s updn_tzone;
 struct check_box_s cb_daylight;
+struct label_s lbl_brightness;
+struct up_down_s updn_bright;
 
-struct tab_ctrl_s tab_ctrl_main = 
-      { ctrl_cap_twindw, &ctwnd_main, };
+//struct tab_ctrl_s tab_ctrl_main = 
+//      { ctrl_cap_twindw, &ctwnd_main, };
+
+struct tab_ctrl_s tab_ctrl_clock = 
+      { ctrl_label, &lbl_clock, };
+
+struct tab_ctrl_s tab_ctrl_lastcolon = 
+      { ctrl_check_box, &cb_lastcolon, };
 
 struct tab_ctrl_s tab_ctrl_ip = 
       { ctrl_button, &btn_ip, };
+
+struct tab_ctrl_s tab_ctrl_utc = 
+      { ctrl_label, &lbl_utc, };
 
 struct tab_ctrl_s tab_ctrl_tzone = 
       { ctrl_up_down, &updn_tzone, };
@@ -107,12 +121,24 @@ struct tab_ctrl_s tab_ctrl_tzone =
 struct tab_ctrl_s tab_ctrl_daylight = 
       { ctrl_check_box, &cb_daylight, };
 
+struct tab_ctrl_s tab_ctrl_brightness = 
+      { ctrl_label, &lbl_brightness, };
+
+struct tab_ctrl_s tab_ctrl_bright = 
+      { ctrl_up_down, &updn_bright, };
+
 struct tab_ctrl_s *ctrls_app[] =
   {
-    &tab_ctrl_main,
+    //&tab_ctrl_main,
+    &tab_ctrl_plain,
+    &tab_ctrl_clock,
+    &tab_ctrl_lastcolon,
     &tab_ctrl_ip,
+    &tab_ctrl_utc,
     &tab_ctrl_tzone,
     &tab_ctrl_daylight,
+    &tab_ctrl_brightness,
+    &tab_ctrl_bright,
     &tab_ctrl_none, // end of list
   };
   
@@ -166,24 +192,35 @@ void setup_app_screens(void) {
   SetupButton (&btn_back, /*x*/1, /*y*/1+LABEL_HEIGHT_PIXELS+1+LABEL_HEIGHT_PIXELS+1+EDIT_HEIGHT_PIXELS+3, "Back", /*void cb_func(void)*/&cb_passwd_back_clicked);
 
   // App screen - setup elements
-  SetupCapTWindow (&ctwnd_main, "Clock", "", "");
-  SetupButton (&btn_ip, /*x horiz*/24, /*y vert*/44, "000.000.000.000", /*void cb_func(void)*/&cb_app_ip_clicked); // force button to be big enough for full IP
+  //SetupWindow (&wnd_plain, /*x0*/0, /*y0*/0, tft.width()-1, tft.height()-1, /*border*/0, /*buffered*/0);
+  //SetupCapTWindow (&ctwnd_main, "Clock", "", "");
+  SetupLabel (&lbl_clock, /*x*/tft.width()-(5*LABEL_WIDTH_PIXELS)/2, /*y*/1, /*max_chars*/5, /*text_default*/"Clock");
+  SetupCheckBox (&cb_lastcolon, /*x*/170, /*y*/1, /*text_str*/":", 0/*!checked_default*/, &cb_app_colon_set/*void cb_func(int check_val)*/);
 
+  SetupButton (&btn_ip, /*x horiz*/24, /*y vert*/36, "000.000.000.000", /*void cb_func(void)*/&cb_app_ip_clicked); // force button to be big enough for full IP
+
+  SetupLabel (&lbl_utc, /*x*/1, /*y*/69, /*max_chars*/3, /*text_default*/"UTC");
 // create a new up/down control 'lst' on screen.
 //  draw at upper-left corner 'x', 'y'
 //  text field will contain up to 'text_max_chars'. This determines width on screen.
 //  default value will be 'dfl_val'. min/max limits are 'min_val' to 'max_val'. Step size is 'val_step'.
 //  when an item is chosen (with 'Enter', right-arrow, middle button, etc.), void cb_func(double sel_val) will be called.
 // When displayed, 'val_prec' is the number of digits that will be displayed after the decimal.
-  SetupUpDown (&updn_tzone, /*x*/24, /*y*/80, /*text_max_chars*/5, NULL/*void cb_func(double sel_val)*/, /*min_val*/-12, /*max_val*/+14, /*dfl_val*/-6, /*val_step*/0.5, /*val_prec*/1);
+  SetupUpDown (&updn_tzone, /*x*/60, /*y*/69, /*text_max_chars*/5, &cb_app_tzone_set/*void cb_func(double sel_val)*/, NULL/*void cb_chg_func(double chg_val)*/, /*min_val*/-12, /*max_val*/+14, /*dfl_val*/-6, /*val_step*/0.5, /*val_prec*/1);
 //  SetupUpDown (&updn_tzone, /*x*/24, /*y*/80, /*text_max_chars*/5, NULL/*void cb_func(double sel_val)*/, /*min_val*/-12, /*max_val*/+14, /*dfl_val*/-0.2, /*val_step*/0.2, /*val_prec*/1);
 
-  SetupCheckBox (&cb_daylight, /*x*/125, /*y*/80, /*text_str*/"DST", 1/*checked_default*/, NULL/*void cb_func(int check_val)*/);
+  SetupCheckBox (&cb_daylight, /*x*/165, /*y*/69, /*text_str*/"DST", 1/*checked_default*/, &cb_app_dst_set/*void cb_func(int check_val)*/);
+
+  SetupLabel (&lbl_brightness, /*x*/1, /*y*/100, /*max_chars*/10, /*text_default*/"Brightness");
+  SetupUpDown (&updn_bright, /*x*/160, /*y*/100, /*text_max_chars*/2, NULL/*void cb_func(double sel_val)*/, &cb_app_bright_set/*void cb_chg_func(double chg_val)*/, /*min_val*/-1, /*max_val*/+16, /*dfl_val*/16, /*val_step*/1, /*val_prec*/0);
 
   app_prefs_get (app_settings);
   set_net_label (app_settings->ssid);
+  SetEdit     (&edit_pass,   app_settings->password);
+  SetCheckBox (&cb_lastcolon, app_settings->last_colon);
   SetUpDown   (&updn_tzone,  app_settings->gmt_offset_hours);
   SetCheckBox (&cb_daylight, app_settings->daylight_observed);
+  SetUpDown   (&updn_bright,  app_settings->bright_steps);
   app_connect();
   ScreenDraw();
 }
@@ -322,10 +359,10 @@ void app_time_set (void) {
   int dst_checked;
   int daylightOffset_sec = 0;
 
-  tzone_hr = GetUpDown(&updn_tzone);
+  tzone_hr = app_settings->gmt_offset_hours;//GetUpDown(&updn_tzone);
   gmtOffset_sec = tzone_hr * 3600; // convert FROM: hours offset TO: seconds offset
 
-  dst_checked = GetCheckBox(&cb_daylight);
+  dst_checked = app_settings->daylight_observed;//GetCheckBox(&cb_daylight);
   if (dst_checked) {
     daylightOffset_sec = 3600; // 1 hour
   }
@@ -399,4 +436,15 @@ void cb_app_dst_set (int dst_checked) {
  app_settings->daylight_observed = dst_checked; 
  app_prefs_put (app_settings);
  app_time_set();
+}
+
+void cb_app_bright_set (double bright_steps) {
+ app_settings->bright_steps = bright_steps; 
+ app_prefs_put (app_settings);
+ sevenseg_bright_set ();
+}
+
+void cb_app_colon_set (int colon_checked) {
+ app_settings->last_colon = colon_checked; 
+ app_prefs_put (app_settings);
 }
