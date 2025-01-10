@@ -36,6 +36,7 @@ void setup()
 
   Wire.begin();        // join i2c bus (address optional for master)
   setup_input_gamepad();
+  setup_gps();
 
   setup_wifi();
 
@@ -92,6 +93,7 @@ void loop()
   // delay(10);
 #endif
 
+  loop_gps();
   sevenseg_loop();
 
   //Serial.println("loop() end");

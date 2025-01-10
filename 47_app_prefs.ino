@@ -13,6 +13,7 @@ struct app_settings_s {
   // 'time' section
   bool daylight_observed;
   double  gmt_offset_hours;
+  int leap_sec;
   int bright_steps;
   bool last_colon;
 };
@@ -31,6 +32,7 @@ void app_prefs_put (struct app_settings_s *app_settings) {
   preferences.begin(PREFS_TIME_SECTION, false /*not read-only*/);
   preferences.putBool("daylight_observed", app_settings->daylight_observed);
   preferences.putDouble("gmt_offset_hours", app_settings->gmt_offset_hours);
+  preferences.putInt("leap_sec", app_settings->leap_sec);
   preferences.end(); // let other namespaces be used later.
 
   preferences.begin(PREFS_DISPLAY_SECTION, false /*not read-only*/);
@@ -50,6 +52,7 @@ void app_prefs_get (struct app_settings_s *app_settings) {
   preferences.begin(PREFS_TIME_SECTION, true /*read-only*/);
   app_settings->daylight_observed = preferences.getBool("daylight_observed", true/*default to observing Daylight Saving Time*/);
   app_settings->gmt_offset_hours = preferences.getInt("gmt_offset_hours", -6/*default to USA Central Standard Time (CST)*/);
+  app_settings->leap_sec = preferences.getInt("leap_sec", 18/*announced to date*/);
   preferences.end(); // let other namespaces be used later.
 
   preferences.begin(PREFS_DISPLAY_SECTION, true /*read-only*/);
@@ -67,6 +70,8 @@ void app_prefs_get (struct app_settings_s *app_settings) {
   Serial.println(app_settings->daylight_observed);
   Serial.print("gmt_offset_hours: ");
   Serial.println(app_settings->gmt_offset_hours);
+  Serial.print("leap_sec: ");
+  Serial.println(app_settings->leap_sec);
 
   Serial.print("bright_steps: ");
   Serial.println(app_settings->bright_steps);

@@ -758,17 +758,29 @@ void DrawButtonLabelToCanvas(struct button_s *btn) {
   }
 }
 
-// set 'lbl' string label to be written inside of button
+// set string label to be written inside of button 'btn', to new text 'label_str'
 //  Note: does NOT make button wider to fit new text.
-void SetButtonText(struct button_s *btn, const char *lbl) {
-  if (lbl != NULL) {
-    strncpy (btn->label_str, lbl, BUTTON_MAX_LABEL);
-  } else { // lbl == NULL
+//  If this is a change, return 'true'.
+bool SetButtonText(struct button_s *btn, const char *label_str) {
+  bool chg = false;
+
+  if (label_str != NULL) {
+    if (strncmp (btn->label_str, label_str, BUTTON_MAX_LABEL) != 0) {
+      chg = true;
+    }
+    strncpy (btn->label_str, label_str, BUTTON_MAX_LABEL);
+  } else { // label_str == NULL
+    if (btn->label_str[0] != '\x0') {
+      chg = true;
+    }
     btn->label_str[0] = '\x0';
   }
   btn->label_str[BUTTON_MAX_LABEL-1] = '\x0'; // ensure null term.
 
-  DrawButtonLabelToCanvas (btn);
+  if (chg) {
+    DrawButtonLabelToCanvas (btn);
+  }
+  return chg;
 }
 
 // create a new button control 'btn' on screen.
@@ -1292,13 +1304,24 @@ void SetEdit (struct edit_s *edt, char *new_text) {
 
 // ------------------- Label control -------------------------
 
-void SetLabel (struct label_s *lbl, const char *text_str) {
+// set label 'lbl' to new text 'text_str'
+//  If this is a change, return 'true'.
+bool SetLabel (struct label_s *lbl, const char *text_str) {
+  bool chg = false;
+
   if (text_str != NULL) {
+    if (strncmp (lbl->text_str, text_str, LABEL_MAX_TEXT) != 0) {
+      chg = true;
+    }
     strncpy (lbl->text_str, text_str, LABEL_MAX_TEXT);
   } else { // text_str == NULL
+    if (lbl->text_str[0] != '\x0') {
+      chg = true;
+    }
     lbl->text_str[0] = '\x0';
   }
   lbl->text_str[LABEL_MAX_TEXT-1] = '\x0'; // ensure null term.
+  return chg;
 }
 
 void SetupLabel (struct label_s *lbl, int x, int y, int text_max_chars, const char *text_default) {
