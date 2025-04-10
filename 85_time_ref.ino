@@ -1,3 +1,5 @@
+//#define TIME_REF_DEBUG_GPS
+
 //const char* timezone = "CST-6";
 
 void setup_time_ref(void) {
@@ -19,10 +21,12 @@ void time_ref_put_gps(struct tm *gps_tm, struct timeval *tv_gps) {
   settimeofday (tv_gps, 0);
 
   getLocalTime(&now_tm); // this function will block for 5sec, if Real Time Clock < 1 Jan 2016
+#ifdef TIME_REF_DEBUG_GPS
   Serial.print("gps_tm->tm_hour: ");
   Serial.print(gps_tm->tm_hour);
   Serial.print(", now_tm.tm_hour: ");
   Serial.println(now_tm.tm_hour);
+#endif
 }
 
 // ---------------- get time ------------

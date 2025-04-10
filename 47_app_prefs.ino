@@ -22,6 +22,25 @@ struct app_settings_s app_settings[1];
 
 Preferences preferences;
 
+void app_prefs_print (struct app_settings_s *app_settings) {
+  Serial.print("ssid: ");
+  Serial.println(app_settings->ssid);
+  Serial.print("password: ");
+  Serial.println(app_settings->password);
+
+  Serial.print("daylight_observed: ");
+  Serial.println(app_settings->daylight_observed);
+  Serial.print("gmt_offset_hours: ");
+  Serial.println(app_settings->gmt_offset_hours);
+  Serial.print("leap_sec: ");
+  Serial.println(app_settings->leap_sec);
+
+  Serial.print("bright_steps: ");
+  Serial.println(app_settings->bright_steps);
+  Serial.print("last_colon: ");
+  Serial.println(app_settings->last_colon);
+}
+
 void app_prefs_put (struct app_settings_s *app_settings) {
   Serial.println("Writing preferences...");
   preferences.begin(PREFS_CREDS_SECTION, false /*not read-only*/);
@@ -39,6 +58,9 @@ void app_prefs_put (struct app_settings_s *app_settings) {
   preferences.putInt("bright_steps", app_settings->bright_steps);
   preferences.putBool("last_colon", app_settings->last_colon);
   preferences.end(); // let other namespaces be used later.
+
+  Serial.println("Wrote:");
+  app_prefs_print(app_settings);
 }
 
 void app_prefs_get (struct app_settings_s *app_settings) {
@@ -51,7 +73,7 @@ void app_prefs_get (struct app_settings_s *app_settings) {
 
   preferences.begin(PREFS_TIME_SECTION, true /*read-only*/);
   app_settings->daylight_observed = preferences.getBool("daylight_observed", true/*default to observing Daylight Saving Time*/);
-  app_settings->gmt_offset_hours = preferences.getInt("gmt_offset_hours", -6/*default to USA Central Standard Time (CST)*/);
+  app_settings->gmt_offset_hours = preferences.getDouble("gmt_offset_hours", -6/*default to USA Central Standard Time (CST)*/);
   app_settings->leap_sec = preferences.getInt("leap_sec", 18/*announced to date*/);
   preferences.end(); // let other namespaces be used later.
 
@@ -61,20 +83,5 @@ void app_prefs_get (struct app_settings_s *app_settings) {
   preferences.end(); // let other namespaces be used later.
 
   Serial.println("Read:");
-  Serial.print("ssid: ");
-  Serial.println(app_settings->ssid);
-  Serial.print("password: ");
-  Serial.println(app_settings->password);
-
-  Serial.print("daylight_observed: ");
-  Serial.println(app_settings->daylight_observed);
-  Serial.print("gmt_offset_hours: ");
-  Serial.println(app_settings->gmt_offset_hours);
-  Serial.print("leap_sec: ");
-  Serial.println(app_settings->leap_sec);
-
-  Serial.print("bright_steps: ");
-  Serial.println(app_settings->bright_steps);
-  Serial.print("last_colon: ");
-  Serial.println(app_settings->last_colon);
+  app_prefs_print(app_settings);
 }
