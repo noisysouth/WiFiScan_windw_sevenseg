@@ -366,8 +366,8 @@ void setup_app_screens(void) {
   set_net_label (app_settings->ssid);
   SetEdit     (&edit_pass,   app_settings->password);
 
-  SetUpDown   (&updn_tzone,  app_settings->gmt_offset_hours);
-  SetCheckBox (&cb_daylight, app_settings->daylight_observed);
+  SetUpDown   (&updn_tzone,  app_settings->gmt_offs);
+  SetCheckBox (&cb_daylight, app_settings->dst);
   SetUpDown   (&updn_leapsec,  app_settings->leap_sec);
 
   SetCheckBox (&cb_lastcolon, app_settings->last_colon);
@@ -461,13 +461,13 @@ void cb_passwd_ok_clicked (void) {
 }
 // ---------------------------- Offset Screen functions --------------------------
 void cb_offs_tzone_set (double tzone_hrs) {
- app_settings->gmt_offset_hours = tzone_hrs; 
+ app_settings->gmt_offs = tzone_hrs; 
  app_prefs_put (app_settings);
  app_time_set();
 }
 
 void cb_offs_dst_set (int dst_checked) {
- app_settings->daylight_observed = dst_checked; 
+ app_settings->dst = dst_checked; 
  app_prefs_put (app_settings);
  app_time_set();
 }
@@ -615,10 +615,10 @@ void app_time_set (void) {
   int dst_checked;
   int daylightOffset_sec = 0;
 
-  tzone_hr = app_settings->gmt_offset_hours;//GetUpDown(&updn_tzone);
+  tzone_hr = app_settings->gmt_offs;//GetUpDown(&updn_tzone);
   gmtOffset_sec = tzone_hr * 3600; // convert FROM: hours offset TO: seconds offset
 
-  dst_checked = app_settings->daylight_observed;//GetCheckBox(&cb_daylight);
+  dst_checked = app_settings->dst;//GetCheckBox(&cb_daylight);
   if (dst_checked) {
     daylightOffset_sec = 3600; // 1 hour
   }

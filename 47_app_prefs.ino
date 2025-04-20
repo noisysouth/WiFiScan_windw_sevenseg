@@ -11,8 +11,8 @@ struct app_settings_s {
   char ssid    [APP_SETTINGS_STR_MAX];
   char password[APP_SETTINGS_STR_MAX];
   // 'time' section
-  bool daylight_observed;
-  double  gmt_offset_hours;
+  bool dst;
+  double  gmt_offs;
   int leap_sec;
   int bright_steps;
   bool last_colon;
@@ -28,10 +28,10 @@ void app_prefs_print (struct app_settings_s *app_settings) {
   Serial.print("password: ");
   Serial.println(app_settings->password);
 
-  Serial.print("daylight_observed: ");
-  Serial.println(app_settings->daylight_observed);
-  Serial.print("gmt_offset_hours: ");
-  Serial.println(app_settings->gmt_offset_hours);
+  Serial.print("dst: ");
+  Serial.println(app_settings->dst);
+  Serial.print("gmt_offs: ");
+  Serial.println(app_settings->gmt_offs);
   Serial.print("leap_sec: ");
   Serial.println(app_settings->leap_sec);
 
@@ -49,8 +49,8 @@ void app_prefs_put (struct app_settings_s *app_settings) {
   preferences.end(); // let other namespaces be used later.
 
   preferences.begin(PREFS_TIME_SECTION, false /*not read-only*/);
-  preferences.putBool("daylight_observed", app_settings->daylight_observed);
-  preferences.putDouble("gmt_offset_hours", app_settings->gmt_offset_hours);
+  preferences.putBool("dst", app_settings->dst);
+  preferences.putDouble("gmt_offs", app_settings->gmt_offs);
   preferences.putInt("leap_sec", app_settings->leap_sec);
   preferences.end(); // let other namespaces be used later.
 
@@ -72,8 +72,8 @@ void app_prefs_get (struct app_settings_s *app_settings) {
   preferences.end(); // let other namespaces be used later.
 
   preferences.begin(PREFS_TIME_SECTION, true /*read-only*/);
-  app_settings->daylight_observed = preferences.getBool("daylight_observed", true/*default to observing Daylight Saving Time*/);
-  app_settings->gmt_offset_hours = preferences.getDouble("gmt_offset_hours", -6/*default to USA Central Standard Time (CST)*/);
+  app_settings->dst = preferences.getBool("dst", true/*default to observing Daylight Saving Time*/);
+  app_settings->gmt_offs = preferences.getDouble("gmt_offs", -6.0/*default to  USA Central Standard Time (CST)*/);
   app_settings->leap_sec = preferences.getInt("leap_sec", 18/*announced to date*/);
   preferences.end(); // let other namespaces be used later.
 

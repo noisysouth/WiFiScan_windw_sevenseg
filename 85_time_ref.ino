@@ -12,7 +12,7 @@ void time_ref_put_gps(struct tm *gps_tm, struct timeval *tv_gps) {
 
   gps_tv_sec = mktime(gps_tm);
   gps_tv_sec += app_settings->leap_sec;
-  gps_tv_sec += app_settings->gmt_offset_hours * 60 * 60;
+  gps_tv_sec += app_settings->gmt_offs * 60 * 60;
   tv_gps->tv_sec = gps_tv_sec;
 
   //setenv("TZ", timezone, 1); // Set the TZ.
