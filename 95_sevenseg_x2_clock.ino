@@ -27,7 +27,7 @@
 #define TIMET_1JAN2016 1451628000
 
 const int matrix_count = 2;
-const int  alpha_count = 3;
+const int  alpha_count = 5;
 
 //Adafruit_7segment matrix[2];
 //Adafruit_AlphaNum4 alpha4[3];
@@ -74,9 +74,13 @@ void sevenseg_setup(void) {
   alpha4[0] = Adafruit_AlphaNum4();
   alpha4[1] = Adafruit_AlphaNum4();
   alpha4[2] = Adafruit_AlphaNum4();
+  alpha4[3] = Adafruit_AlphaNum4();
+  alpha4[4] = Adafruit_AlphaNum4();
   alpha4[0].begin(0x72);
   alpha4[1].begin(0x73);
   alpha4[2].begin(0x74);
+  alpha4[3].begin(0x75);
+  alpha4[4].begin(0x76);
 
   sevenseg_bright_set();
 }
@@ -160,9 +164,28 @@ void sevenseg_loop(void) {
   alpha4[2].writeDigitAscii(2, '0' + ((year_int/  10)%10));
   alpha4[2].writeDigitAscii(3, '0' + ( year_int      %10));
 
+  // Seconds
+  alpha4[3].writeDigitAscii(0, '0' + now_tm.tm_sec/10);
+  alpha4[3].writeDigitAscii(1, '0' + now_tm.tm_sec%10, true /* draw decimal, 0.56" height only*/);
+
+  // fractional seconds
+  alpha4[3].writeDigitAscii(2, '0' + tv_now.tv_usec/100000);
+  alpha4[3].writeDigitAscii(3, '0' + (tv_now.tv_usec/10000) % 10);
+
+  // am/pm
+  if (now_tm.tm_hour < 12) {
+    alpha4[4].writeDigitAscii(0, 'A');
+    alpha4[4].writeDigitAscii(1, 'M');
+  } else { // !is_am
+    alpha4[4].writeDigitAscii(0, 'P');
+    alpha4[4].writeDigitAscii(1, 'M');
+  }
+
   matrix[0].writeDisplay();
   matrix[1].writeDisplay();
   alpha4[0].writeDisplay();
   alpha4[1].writeDisplay();
   alpha4[2].writeDisplay();
+  alpha4[3].writeDisplay();
+  alpha4[4].writeDisplay();
 }
